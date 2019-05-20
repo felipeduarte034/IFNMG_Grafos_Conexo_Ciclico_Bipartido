@@ -68,36 +68,141 @@ public:
 		y = _y;
 	}
 };
-
-bool DFS(Grafo *g, int v, vector<int> &cor, int pai) //busca em profundidade
+bool removeByValue(int value, vector<int> &v)
 {
+	for(int i=0; i<v.size(); i++)
+	{
+		if(value == v[i])
+		{
+			v.erase(v.begin() + i);
+			return true;
+		}
+	}
+	return false;
+}
+bool DFS_old(Grafo *g, int v, vector<int> &cor, int ancestral, vector<int> &container) //busca em profundidade
+{
+	int pai = ancestral;
 	if(cor[v]==BRANCO)
+	{
 		cor[v] = CINZA;
-	//cout << "\nv: "<<v;
+		removeByValue(v,container);
+	}
+	cout << "\nv: "<<v;
 	for (int i = 0; i < g->adj[v].size(); ++i)
 	{
 		int w = g->adj[v][i];
-		//cout<<"  w: "<<w<<"";
+		if(v==4)
+			cout << " [4 -> pai: " << pai << ", w:" << w << "] ";
+		cout <<"  w: "<<w<<"";
 		if (cor[w] == BRANCO)
 		{
-			//cout << " BRANCO# ";
-			return DFS(g, w, cor, v);
+			cout << " BRANCO# ";
+			if(i<1)
+				return DFS_old(g, w, cor, v, container);
+			else
+				return DFS_old(g, w, cor, w, container);
 		}
 		else if (cor[w] == CINZA)
 		{
-			//cout << " CINZA ";
-			//cout << "(pai:"<<pai<<")";
+			cout << " CINZA ";
+			cout << "(pai:"<<pai<<")";
 			if(w==pai)
 				continue;
 			else
 			{
-				//cout << "$";
+				cout << "$\n";
 				return true;
 			}
 		}
 	}
 	cor[v] = PRETO;
 	return false;
+}
+bool DFS(Grafo *g, int v, vector<int> &cor, int ancestral, vector<int> &container) //busca em profundidade
+{
+	int pai = ancestral;
+	if(cor[v]==BRANCO)
+	{
+		cor[v] = CINZA;
+		removeByValue(v,container);
+	}
+	cout << "\nv:"<<v<<" p:"<<pai;
+	for (int i = 0; i < g->adj[v].size(); ++i)
+	{
+		int w = g->adj[v][i];
+		cout <<"  ->w: "<<w<<"";
+		if (cor[w] == BRANCO)
+		{
+			cout << " BRANCO# ";
+			DFS(g, w, cor, v, container);
+		}
+		else if (cor[w] == CINZA)
+		{
+			cout << " CINZA ";
+			cout << "(v:"<<v<<")";
+			if(w==pai)
+				continue;
+			else
+			{
+				cout << "$\n";
+				return true;
+			}
+		}
+	}
+	cor[v] = PRETO;
+	return false;
+}
+bool isBipartidoAux(Grafo *g, int s, vector<int> &container) //busca em largura
+{
+	//branco   = 0
+	//azul     = 1
+	//vermelho = 2
+	//branco = não visitado
+	//red e blue = grupos opostos
+	vector<int> fila(g->n);
+	vector<int> cor(g->n, BRANCO);
+	int ini, fim;
+	ini = fim = 0;
+	cor[s] = BLUE;
+	removeByValue(s,container);
+	fila[fim++] = s;
+	while (ini < fim)
+	{
+		//cout << "\nini:"<<ini<<" - fim:"<<fim<<"  ";
+		int v = fila[ini++];
+		//cout << "v: "<<v<<"  ";
+		for (int i = 0; i < g->adj[v].size(); ++i)
+		{
+			int w = g->adj[v][i];
+			//cout << "(w:" << w<<")=";
+			/*switch (cor[w])
+			{
+				case BRANCO:
+					cout << "BRANCO" << " ";
+					break;
+				case BLUE:
+					cout << "BLUE" << " ";
+					break;
+				case RED:
+					cout << "RED" << " ";
+					break;
+			}*/
+			if (cor[w] == BRANCO)
+			{
+				cor[w] = 3 - cor[v];
+				removeByValue(w,container);
+				//cout << "cor[w]=" << cor[w] << " ";
+				fila[fim++] = w;
+			}
+			else if (cor[w] == cor[v])
+			{
+				//cout << "(cor[w]: " << cor[w] << " == cor[v]: " << cor[v] << ")\n";
+				return false;
+			}
+		}
+	}
+	return true;
 }
 
 bool isConexo(Grafo *g, int s) //busca em largura
@@ -106,7 +211,7 @@ bool isConexo(Grafo *g, int s) //busca em largura
 	vector<int> cor(g->n, 0);
 	int ini, fim;
 	ini = fim = 0;
-	cor[s] = 1;
+	cor[s] = CINZA;
 	fila[fim++] = s;
 	while (ini < fim)
 	{
@@ -144,58 +249,38 @@ bool isConexo(Grafo *g, int s) //busca em largura
 }
 bool isCiclico(Grafo *g, int s) //DFS - busca em profudindade
 {
+	bool resp=false;
+	int ini = s;
 	vector<int> cor(g->n, 0);
-	bool resp = DFS(g,s,cor,s);
-	//cout << endl;
-	return resp;
-}
-bool isBipartido(Grafo *g, int s)
-{
-	//branco   = 0
-	//azul     = 1
-	//vermelho = 2
-	//branco = não visitado
-	//red e blue = grupos opostos
-	vector<int> fila(g->n);
-	vector<int> cor(g->n, BRANCO);
-	int ini, fim;
-	ini = fim = 0;
-	cor[s] = BLUE;
-	fila[fim++] = s;
-	while (ini < fim)
+	vector<int> brancos(g->n, 0);
+	for(int i=0; i<brancos.size(); i++)
+		brancos[i]=i;
+
+	while(brancos.size()>0)
 	{
-		//cout << "\nini:"<<ini<<" - fim:"<<fim<<"  ";
-		int v = fila[ini++];
-		//cout << "v: "<<v<<"  ";
-		for (int i = 0; i < g->adj[v].size(); ++i)
-		{
-			int w = g->adj[v][i];
-			//cout << "(w:" << w<<")=";
-			/*switch (cor[w])
-			{
-				case BRANCO:
-					cout << "BRANCO" << " ";
-					break;
-				case BLUE:
-					cout << "BLUE" << " ";
-					break;
-				case RED:
-					cout << "RED" << " ";
-					break;
-			}*/
-			if (cor[w] == BRANCO)
-			{
-				cor[w] = 3 - cor[v];
-				//cout << "cor[w]=" << cor[w] << " ";
-				fila[fim++] = w;
-			}
-			else if (cor[w] == cor[v])
-			{
-				//cout << "(cor[w]: " << cor[w] << " == cor[v]: " << cor[v] << ")\n";
-				return false;
-			}
-		}
+		if(DFS(g,ini,cor,ini,brancos))
+			return true;
+		else
+			ini=brancos[0];
 	}
+	//cout << endl;
+	return false;
+}
+bool isBipartido(Grafo *g, int s) //busca em largura
+{
+	bool resp=false;
+	int ini = s;
+	vector<int> brancos(g->n, 0);
+	for(int i=0; i<brancos.size(); i++)
+		brancos[i]=i;
+	while(brancos.size()>0)
+	{
+		if(!isBipartidoAux(g,ini,brancos))
+			return false;
+		else
+			ini=brancos[0];
+	}
+	//cout << endl;
 	return true;
 }
 
@@ -217,6 +302,7 @@ int main(int argc, char const *argv[])
 	int counter = 0;
 	Grafo *g;
 	Info *info = NULL;
+	int m=0;//numero de linhas
 
 	while (scanf("%[^\n]\n", line) == 1)
 	{
@@ -225,18 +311,22 @@ int main(int argc, char const *argv[])
 		if (counter == 1)
 		{
 			info = DecodificaInstrucao(line);
+			m = info->y;
 			g = new Grafo(info->x);
 			continue;
 		}
 		info = DecodificaInstrucao(line);
 		g->criarAresta(info->x, info->y);
+
+		if(counter == m+1)//+1 devido a primeira linha ser parametros
+			break;
 	}
 
 	cout << (isConexo(g,0) ? "Conexo" : "Desconexo") << endl;
 	cout << (isCiclico(g,0) ? "Ciclico" : "Aciclico") << endl;
 	cout << (isBipartido(g,0) ? "Bipartido" : "Nao-bipartido") << endl;
 
-	//g->printAdj();
+	g->printAdj();
 
 	return 0;
 }

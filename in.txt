@@ -3,3 +3,7 @@
 1 2
 2 3
 0 3
+
+Conexo
+Ciclico
+Bipartido
