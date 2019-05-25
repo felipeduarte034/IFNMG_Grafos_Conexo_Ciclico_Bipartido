@@ -80,45 +80,7 @@ bool removeByValue(int value, vector<int> &v)
 	}
 	return false;
 }
-bool DFS_old(Grafo *g, int v, vector<int> &cor, int ancestral, vector<int> &container) //busca em profundidade
-{
-	int pai = ancestral;
-	if(cor[v]==BRANCO)
-	{
-		cor[v] = CINZA;
-		removeByValue(v,container);
-	}
-	cout << "\nv: "<<v;
-	for (int i = 0; i < g->adj[v].size(); ++i)
-	{
-		int w = g->adj[v][i];
-		if(v==4)
-			cout << " [4 -> pai: " << pai << ", w:" << w << "] ";
-		cout <<"  w: "<<w<<"";
-		if (cor[w] == BRANCO)
-		{
-			cout << " BRANCO# ";
-			if(i<1)
-				return DFS_old(g, w, cor, v, container);
-			else
-				return DFS_old(g, w, cor, w, container);
-		}
-		else if (cor[w] == CINZA)
-		{
-			cout << " CINZA ";
-			cout << "(pai:"<<pai<<")";
-			if(w==pai)
-				continue;
-			else
-			{
-				cout << "$\n";
-				return true;
-			}
-		}
-	}
-	cor[v] = PRETO;
-	return false;
-}
+
 bool DFS(Grafo *g, int v, vector<int> &cor, int ancestral, vector<int> &container) //busca em profundidade
 {
 	int pai = ancestral;
@@ -127,25 +89,25 @@ bool DFS(Grafo *g, int v, vector<int> &cor, int ancestral, vector<int> &containe
 		cor[v] = CINZA;
 		removeByValue(v,container);
 	}
-	cout << "\nv:"<<v<<" p:"<<pai;
+	//cout << "\nv:"<<v<<" p:"<<pai;
 	for (int i = 0; i < g->adj[v].size(); ++i)
 	{
 		int w = g->adj[v][i];
-		cout <<"  ->w: "<<w<<"";
+		//cout <<"  ->w: "<<w<<"";
 		if (cor[w] == BRANCO)
 		{
-			cout << " BRANCO# ";
+			//cout << " BRANCO# ";
 			DFS(g, w, cor, v, container);
 		}
 		else if (cor[w] == CINZA)
 		{
-			cout << " CINZA ";
-			cout << "(v:"<<v<<")";
+			//cout << " CINZA ";
+			//cout << "(v:"<<v<<")";
 			if(w==pai)
 				continue;
 			else
 			{
-				cout << "$\n";
+				//cout << "$\n";
 				return true;
 			}
 		}
@@ -318,7 +280,7 @@ int main(int argc, char const *argv[])
 		info = DecodificaInstrucao(line);
 		g->criarAresta(info->x, info->y);
 
-		if(counter == m+1)//+1 devido a primeira linha ser parametros
+		if(counter == m+1)//+1 devido a primeira linha ser parametro
 			break;
 	}
 
@@ -326,7 +288,7 @@ int main(int argc, char const *argv[])
 	cout << (isCiclico(g,0) ? "Ciclico" : "Aciclico") << endl;
 	cout << (isBipartido(g,0) ? "Bipartido" : "Nao-bipartido") << endl;
 
-	g->printAdj();
+	//g->printAdj();
 
 	return 0;
 }
